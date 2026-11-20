@@ -1,0 +1,6 @@
+[
+  { "file": "1-cover.png", "path": "/", "note": "checklist at the top, progress header, 14 trophies earned", "viewport": { "width": 1280, "height": 800 } },
+  { "file": "2-checklist.png", "path": "/", "note": "checklist cards with guide text, sources and earned states", "scroll": 1400, "viewport": { "width": 1280, "height": 800 } },
+  { "file": "3-roadmap.png", "path": "/", "tab": "roadmap", "note": "the 8 roadmap stages with their trophies", "viewport": { "width": 1280, "height": 800 } },
+  { "file": "4-missable.png", "path": "/", "tab": "missable", "note": "the missable trophies with how each one is lost", "viewport": { "width": 1280, "height": 800 } }
+]

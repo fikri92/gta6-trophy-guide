@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0a0c10">
+<meta name="description" content="Offline trophy guide and progress tracker for the 55 PlayStation 5 trophies of Grand Theft Auto VI: roadmap, missable warnings, filters and spoiler shield.">
+<title>Leonida Legend — GTA VI trophy guide &amp; tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to the trophy list</a>
+
+<template id="icon-template"><svg class="icon" aria-hidden="true" focusable="false"><use></use></svg></template>
+
+<svg class="sprite" aria-hidden="true" focusable="false" width="0" height="0">
+  <symbol id="i-trophy" viewBox="0 0 24 24">
+    <path d="M7.5 3.5h9v4.2a4.5 4.5 0 0 1-9 0V3.5Z"/>
+    <path d="M7.5 5H4.6v1.4A3.4 3.4 0 0 0 8 9.8"/>
+    <path d="M16.5 5h2.9v1.4A3.4 3.4 0 0 1 16 9.8"/>
+    <path d="M12 12.2v4.1"/>
+    <path d="M8.7 20.5h6.6l-.8-3.6H9.5l-.8 3.6Z"/>
+  </symbol>
+  <symbol id="i-list" viewBox="0 0 24 24">
+    <path d="M9 6.5h10M9 12h10M9 17.5h10"/>
+    <path d="M4.6 6.5h.01M4.6 12h.01M4.6 17.5h.01"/>
+  </symbol>
+  <symbol id="i-route" viewBox="0 0 24 24">
+    <path d="M6.5 19.5V14a3 3 0 0 1 3-3h5a3 3 0 0 0 3-3V4.5"/>
+    <circle cx="6.5" cy="20" r="1.4"/>
+    <circle cx="17.5" cy="3.6" r="1.4"/>
+    <path d="M4 6.5h5"/>
+  </symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24">
+    <path d="M12 4.6 20.2 19H3.8L12 4.6Z"/>
+    <path d="M12 9.6v4.2M12 16.6h.01"/>
+  </symbol>
+  <symbol id="i-search" viewBox="0 0 24 24">
+    <circle cx="10.8" cy="10.8" r="6.2"/>
+    <path d="m15.4 15.4 4.1 4.1"/>
+  </symbol>
+  <symbol id="i-download" viewBox="0 0 24 24">
+    <path d="M12 4v10.2M7.8 10.6 12 14.8l4.2-4.2"/>
+    <path d="M4.5 17.5v1.3a1.7 1.7 0 0 0 1.7 1.7h11.6a1.7 1.7 0 0 0 1.7-1.7v-1.3"/>
+  </symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24">
+    <path d="M12 15.2V5M7.8 9.2 12 5l4.2 4.2"/>
+    <path d="M4.5 17.5v1.3a1.7 1.7 0 0 0 1.7 1.7h11.6a1.7 1.7 0 0 0 1.7-1.7v-1.3"/>
+  </symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24">
+    <path d="M19.4 12a7.4 7.4 0 1 1-2.3-5.3"/>
+    <path d="M19.6 4.4v4.2h-4.2"/>
+  </symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24">
+    <rect x="4.9" y="10.4" width="14.2" height="9.4" rx="2"/>
+    <path d="M8.3 10.4V8a3.7 3.7 0 0 1 7.4 0v2.4"/>
+  </symbol>
+  <symbol id="i-link" viewBox="0 0 24 24">
+    <path d="M13.6 5.4h4.9v4.9"/>
+    <path d="M18.5 5.4 10.9 13"/>
+    <path d="M18.2 14.4v3.7a1.9 1.9 0 0 1-1.9 1.9H6.1a1.9 1.9 0 0 1-1.9-1.9V7.6a1.9 1.9 0 0 1 1.9-1.9h3.7"/>
+  </symbol>
+  <symbol id="i-check" viewBox="0 0 24 24">
+    <path d="m5.4 12.6 4.2 4.2 9-9"/>
+  </symbol>
+  <symbol id="i-close" viewBox="0 0 24 24">
+    <path d="m6.4 6.4 11.2 11.2M17.6 6.4 6.4 17.6"/>
+  </symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24">
+    <path d="M12 3.6l1.9 5.1 5.1 1.9-5.1 1.9-1.9 5.1-1.9-5.1L5 10.6l5.1-1.9L12 3.6Z"/>
+  </symbol>
+</svg>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg class="icon" width="26" height="26"><use href="#i-trophy"></use></svg>
+      </span>
+      <span class="brand-text">
+        <strong>Leonida Legend</strong>
+        <span>GTA VI · Trophy Companion</span>
+      </span>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-head">
+        <p class="progress-count" id="progress-label">
+          <b id="earned-count">0</b><span class="slash">/</span><span id="total-count">55</span> earned
+        </p>
+        <p class="progress-pct" id="pct">0%</p>
+      </div>
+      <div class="bar" id="bar" role="progressbar" aria-labelledby="progress-label" aria-valuemin="0" aria-valuemax="55" aria-valuenow="0" aria-valuetext="0 of 55 trophies earned">
+        <span class="bar-fill" id="bar-fill"></span>
+      </div>
+      <div class="progress-sub">
+        <span id="missable-left">12 missable still unearned</span>
+        <span aria-hidden="true">·</span>
+        <span id="platinum-note">Platinum locked</span>
+      </div>
+    </div>
+
+    <div class="grade-strip" id="stats" aria-label="Trophies earned by grade"></div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" aria-label="Tracker controls">
+    <section class="panel">
+      <h2 class="panel-h">View</h2>
+      <div class="tabs" role="tablist" aria-orientation="vertical" aria-label="Tracker views">
+        <button class="tab" type="button" role="tab" id="tab-checklist" aria-selected="true" aria-controls="panel-checklist" data-view="checklist">
+          <svg class="icon" width="17" height="17" aria-hidden="true"><use href="#i-list"></use></svg>
+          <span class="tab-label">Checklist</span><span class="tab-n" data-count="checklist">55</span>
+        </button>
+        <button class="tab" type="button" role="tab" id="tab-roadmap" aria-selected="false" aria-controls="panel-roadmap" tabindex="-1" data-view="roadmap">
+          <svg class="icon" width="17" height="17" aria-hidden="true"><use href="#i-route"></use></svg>
+          <span class="tab-label">Roadmap</span><span class="tab-n" data-count="roadmap">8</span>
+        </button>
+        <button class="tab" type="button" role="tab" id="tab-missable" aria-selected="false" aria-controls="panel-missable" tabindex="-1" data-view="missable">
+          <svg class="icon" width="17" height="17" aria-hidden="true"><use href="#i-alert"></use></svg>
+          <span class="tab-label">Missable</span><span class="tab-n" data-count="missable">12</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="search-field">
+        <svg class="icon search-icon" width="16" height="16" aria-hidden="true"><use href="#i-search"></use></svg>
+        <input id="search" type="search" placeholder="Search trophies…" autocomplete="off" spellcheck="false" aria-label="Search trophies by name, description or guide">
+        <kbd class="kbd" aria-hidden="true">/</kbd>
+      </div>
+
+      <h2 class="panel-h panel-h-second">Grade</h2>
+      <div class="pills" id="grade-pills" role="group" aria-label="Filter by trophy grade">
+        <button class="pill" type="button" data-grade="all" aria-pressed="true">All<span class="pill-n">55</span></button>
+        <button class="pill" type="button" data-grade="platinum" aria-pressed="false">Platinum<span class="pill-n">1</span></button>
+        <button class="pill" type="button" data-grade="gold" aria-pressed="false">Gold<span class="pill-n">2</span></button>
+        <button class="pill" type="button" data-grade="silver" aria-pressed="false">Silver<span class="pill-n">6</span></button>
+        <button class="pill" type="button" data-grade="bronze" aria-pressed="false">Bronze<span class="pill-n">46</span></button>
+      </div>
+      <h2 class="panel-h panel-h-second">Type</h2>
+      <div class="pills" id="kind-pills" role="group" aria-label="Filter by trophy type">
+        <button class="pill" type="button" data-kind="all" aria-pressed="true">All<span class="pill-n">55</span></button>
+        <button class="pill" type="button" data-kind="story" aria-pressed="false">Story<span class="pill-n">12</span></button>
+        <button class="pill" type="button" data-kind="missable" aria-pressed="false">Missable<span class="pill-n">12</span></button>
+        <button class="pill" type="button" data-kind="collectibles" aria-pressed="false">Collectibles<span class="pill-n">5</span></button>
+        <button class="pill" type="button" data-kind="activities" aria-pressed="false">Activities<span class="pill-n">37</span></button>
+        <button class="pill" type="button" data-kind="online" aria-pressed="false">Online<span class="pill-n">0</span></button>
+      </div>
+
+      <div class="rail-split"></div>
+      <button class="switch" type="button" id="spoiler" role="switch" aria-checked="true">
+        <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
+        <span class="switch-copy">
+          <span class="switch-title">Spoiler shield</span>
+          <span class="switch-state" id="spoiler-state">On — story names hidden</span>
+        </span>
+      </button>
+    </section>
+
+    <section class="panel panel-actions">
+      <h2 class="panel-h">Progress file</h2>
+      <div class="actions">
+        <button class="btn" type="button" id="export">
+          <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#i-download"></use></svg>
+          Export
+        </button>
+        <button class="btn" type="button" id="import">
+          <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#i-upload"></use></svg>
+          Import
+        </button>
+        <button class="btn btn-quiet" type="button" id="reset">
+          <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#i-reset"></use></svg>
+          Reset
+        </button>
+        <input type="file" id="import-file" accept="application/json,.json" hidden>
+      </div>
+      <p class="fineprint">Saved in this browser only.</p>
+    </section>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="view-head">
+      <div class="view-head-text">
+        <h1 id="view-title">Trophy checklist</h1>
+        <p id="view-sub">All 55 trophies, in roadmap order. Tick a card to bank it.</p>
+      </div>
+      <div class="view-tools">
+        <label class="sort-label" for="sort">Sort</label>
+        <span class="select-wrap">
+          <select id="sort" class="select">
+            <option value="stage">Roadmap order</option>
+            <option value="grade">Grade</option>
+            <option value="name">Name</option>
+          </select>
+        </span>
+      </div>
+    </div>
+
+    <section class="panel-main" id="panel-checklist" role="tabpanel" aria-labelledby="tab-checklist" tabindex="0">
+      <div class="result-line">
+        <p id="result-count" aria-live="polite">Showing 55 of 55 trophies</p>
+        <p class="result-meta" id="result-meta"></p>
+      </div>
+      <div class="list" id="list"></div>
+      <div class="empty" id="empty" hidden>
+        <svg class="icon" width="26" height="26" aria-hidden="true"><use href="#i-search"></use></svg>
+        <p class="empty-title">No trophies match</p>
+        <p class="empty-copy" id="empty-copy">Clear the search or pick another filter.</p>
+        <button class="btn" type="button" id="clear-filters">Clear filters</button>
+      </div>
+    </section>
+
+    <section class="panel-main" id="panel-roadmap" role="tabpanel" aria-labelledby="tab-roadmap" tabindex="0" hidden>
+      <p class="section-lede">Eight stages from the first bronze to the platinum. Missables are flagged where they sit, so nothing is locked out by a story beat you cannot rewind.</p>
+      <div class="roadmap" id="roadmap"></div>
+    </section>
+
+    <section class="panel-main" id="panel-missable" role="tabpanel" aria-labelledby="tab-missable" tabindex="0" hidden>
+      <p class="section-lede">These twelve can be lost for good. Each card names the moment it disappears — clear them before the chapter marker listed on the roadmap.</p>
+      <div class="missable-list" id="missable-list"></div>
+    </section>
+
+    <footer class="foot">
+      <p>Trophy names and descriptions are the official PlayStation 5 list, reproduced verbatim. Guides, roadmap and warnings are original write-ups for this tracker.</p>
+      <p class="foot-meta" id="foot-meta"></p>
+    </footer>
+  </main>
+</div>
+
+<dialog class="dialog" id="reset-dialog" aria-labelledby="reset-title" aria-describedby="reset-copy">
+  <form method="dialog" class="dialog-form">
+    <h2 id="reset-title">Reset all progress?</h2>
+    <p id="reset-copy">This clears every ticked trophy in this browser. Export first if you want a copy — the reset cannot be undone.</p>
+    <div class="dialog-actions">
+      <button class="btn btn-quiet" value="cancel" type="submit">Keep progress</button>
+      <button class="btn btn-danger" value="confirm" type="submit" id="reset-confirm">Reset everything</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<noscript>
+  <p class="noscript">This tracker needs JavaScript enabled to read its trophy data and store your progress.</p>
+</noscript>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
