@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#0a0c10">
-<meta name="description" content="Offline trophy guide and progress tracker for the 55 PlayStation 5 trophies of Grand Theft Auto VI: roadmap, missable warnings, filters and spoiler shield.">
-<title>Leonida Legend — GTA VI trophy guide &amp; tracker</title>
+<meta name="theme-color" content="#0b1016">
+<meta name="description" content="Offline trophy guide and progress tracker for the 55 PlayStation 5 trophies of Grand Theft Auto VI: a written guide for every trophy, an eight-stage roadmap, missable warnings, filters and a spoiler shield.">
+<title>Leonida Legend — GTA VI trophy guide and tracker</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -64,9 +64,6 @@
   <symbol id="i-check" viewBox="0 0 24 24">
     <path d="m5.4 12.6 4.2 4.2 9-9"/>
   </symbol>
-  <symbol id="i-close" viewBox="0 0 24 24">
-    <path d="m6.4 6.4 11.2 11.2M17.6 6.4 6.4 17.6"/>
-  </symbol>
   <symbol id="i-spark" viewBox="0 0 24 24">
     <path d="M12 3.6l1.9 5.1 5.1 1.9-5.1 1.9-1.9 5.1-1.9-5.1L5 10.6l5.1-1.9L12 3.6Z"/>
   </symbol>
@@ -76,11 +73,11 @@
   <div class="topbar-inner">
     <div class="brand">
       <span class="brand-mark" aria-hidden="true">
-        <svg class="icon" width="26" height="26"><use href="#i-trophy"></use></svg>
+        <svg class="icon" width="24" height="24"><use href="#i-trophy"></use></svg>
       </span>
       <span class="brand-text">
         <strong>Leonida Legend</strong>
-        <span>GTA VI · Trophy Companion</span>
+        <span>GTA VI · Trophy companion</span>
       </span>
     </div>
 
@@ -111,15 +108,15 @@
       <h2 class="panel-h">View</h2>
       <div class="tabs" role="tablist" aria-orientation="vertical" aria-label="Tracker views">
         <button class="tab" type="button" role="tab" id="tab-checklist" aria-selected="true" aria-controls="panel-checklist" data-view="checklist">
-          <svg class="icon" width="17" height="17" aria-hidden="true"><use href="#i-list"></use></svg>
+          <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#i-list"></use></svg>
           <span class="tab-label">Checklist</span><span class="tab-n" data-count="checklist">55</span>
         </button>
         <button class="tab" type="button" role="tab" id="tab-roadmap" aria-selected="false" aria-controls="panel-roadmap" tabindex="-1" data-view="roadmap">
-          <svg class="icon" width="17" height="17" aria-hidden="true"><use href="#i-route"></use></svg>
+          <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#i-route"></use></svg>
           <span class="tab-label">Roadmap</span><span class="tab-n" data-count="roadmap">8</span>
         </button>
         <button class="tab" type="button" role="tab" id="tab-missable" aria-selected="false" aria-controls="panel-missable" tabindex="-1" data-view="missable">
-          <svg class="icon" width="17" height="17" aria-hidden="true"><use href="#i-alert"></use></svg>
+          <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#i-alert"></use></svg>
           <span class="tab-label">Missable</span><span class="tab-n" data-count="missable">12</span>
         </button>
       </div>
@@ -127,8 +124,8 @@
 
     <section class="panel">
       <div class="search-field">
-        <svg class="icon search-icon" width="16" height="16" aria-hidden="true"><use href="#i-search"></use></svg>
-        <input id="search" type="search" placeholder="Search trophies…" autocomplete="off" spellcheck="false" aria-label="Search trophies by name, description or guide">
+        <svg class="icon search-icon" width="15" height="15" aria-hidden="true"><use href="#i-search"></use></svg>
+        <input id="search" type="search" placeholder="Search trophies" autocomplete="off" spellcheck="false" aria-label="Search trophies by name, description or guide">
         <kbd class="kbd" aria-hidden="true">/</kbd>
       </div>
 
@@ -140,6 +137,7 @@
         <button class="pill" type="button" data-grade="silver" aria-pressed="false">Silver<span class="pill-n">6</span></button>
         <button class="pill" type="button" data-grade="bronze" aria-pressed="false">Bronze<span class="pill-n">46</span></button>
       </div>
+
       <h2 class="panel-h panel-h-second">Type</h2>
       <div class="pills" id="kind-pills" role="group" aria-label="Filter by trophy type">
         <button class="pill" type="button" data-kind="all" aria-pressed="true">All<span class="pill-n">55</span></button>
@@ -147,10 +145,10 @@
         <button class="pill" type="button" data-kind="missable" aria-pressed="false">Missable<span class="pill-n">12</span></button>
         <button class="pill" type="button" data-kind="collectibles" aria-pressed="false">Collectibles<span class="pill-n">5</span></button>
         <button class="pill" type="button" data-kind="activities" aria-pressed="false">Activities<span class="pill-n">37</span></button>
-        <button class="pill" type="button" data-kind="online" aria-pressed="false">Online<span class="pill-n">0</span></button>
       </div>
 
       <div class="rail-split"></div>
+
       <button class="switch" type="button" id="spoiler" role="switch" aria-checked="true">
         <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
         <span class="switch-copy">
@@ -164,20 +162,20 @@
       <h2 class="panel-h">Progress file</h2>
       <div class="actions">
         <button class="btn" type="button" id="export">
-          <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#i-download"></use></svg>
+          <svg class="icon" width="15" height="15" aria-hidden="true"><use href="#i-download"></use></svg>
           Export
         </button>
         <button class="btn" type="button" id="import">
-          <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#i-upload"></use></svg>
+          <svg class="icon" width="15" height="15" aria-hidden="true"><use href="#i-upload"></use></svg>
           Import
         </button>
         <button class="btn btn-quiet" type="button" id="reset">
-          <svg class="icon" width="16" height="16" aria-hidden="true"><use href="#i-reset"></use></svg>
+          <svg class="icon" width="15" height="15" aria-hidden="true"><use href="#i-reset"></use></svg>
           Reset
         </button>
         <input type="file" id="import-file" accept="application/json,.json" hidden>
       </div>
-      <p class="fineprint">Saved in this browser only.</p>
+      <p class="fineprint">Saved in this browser only. Export a copy before you switch machines.</p>
     </section>
   </aside>
 
@@ -185,7 +183,7 @@
     <div class="view-head">
       <div class="view-head-text">
         <h1 id="view-title">Trophy checklist</h1>
-        <p id="view-sub">All 55 trophies, in roadmap order. Tick a card to bank it.</p>
+        <p id="view-sub">All 55 trophies in roadmap order. Tick a card to bank it.</p>
       </div>
       <div class="view-tools">
         <label class="sort-label" for="sort">Sort</label>
@@ -206,7 +204,7 @@
       </div>
       <div class="list" id="list"></div>
       <div class="empty" id="empty" hidden>
-        <svg class="icon" width="26" height="26" aria-hidden="true"><use href="#i-search"></use></svg>
+        <svg class="icon" width="24" height="24" aria-hidden="true"><use href="#i-search"></use></svg>
         <p class="empty-title">No trophies match</p>
         <p class="empty-copy" id="empty-copy">Clear the search or pick another filter.</p>
         <button class="btn" type="button" id="clear-filters">Clear filters</button>
@@ -214,17 +212,17 @@
     </section>
 
     <section class="panel-main" id="panel-roadmap" role="tabpanel" aria-labelledby="tab-roadmap" tabindex="0" hidden>
-      <p class="section-lede">Eight stages from the first bronze to the platinum. Missables are flagged where they sit, so nothing is locked out by a story beat you cannot rewind.</p>
+      <p class="section-lede">Eight stages from the first bronze to the platinum. Missables are flagged where they sit, so no story beat locks you out of a trophy you meant to take.</p>
       <div class="roadmap" id="roadmap"></div>
     </section>
 
     <section class="panel-main" id="panel-missable" role="tabpanel" aria-labelledby="tab-missable" tabindex="0" hidden>
-      <p class="section-lede">These twelve can be lost for good. Each card names the moment it disappears — clear them before the chapter marker listed on the roadmap.</p>
+      <p class="section-lede">These twelve can be lost for good. Each card names the moment it disappears, so clear it before you reach that chapter marker.</p>
       <div class="missable-list" id="missable-list"></div>
     </section>
 
     <footer class="foot">
-      <p>Trophy names and descriptions are the official PlayStation 5 list, reproduced verbatim. Guides, roadmap and warnings are original write-ups for this tracker.</p>
+      <p>Trophy names and descriptions follow the official PlayStation 5 list. The guides, roadmap and missable warnings are written for this tracker.</p>
       <p class="foot-meta" id="foot-meta"></p>
     </footer>
   </main>
@@ -233,7 +231,7 @@
 <dialog class="dialog" id="reset-dialog" aria-labelledby="reset-title" aria-describedby="reset-copy">
   <form method="dialog" class="dialog-form">
     <h2 id="reset-title">Reset all progress?</h2>
-    <p id="reset-copy">This clears every ticked trophy in this browser. Export first if you want a copy — the reset cannot be undone.</p>
+    <p id="reset-copy">This clears every ticked trophy in this browser. Export first if you want a copy. A reset cannot be undone.</p>
     <div class="dialog-actions">
       <button class="btn btn-quiet" value="cancel" type="submit">Keep progress</button>
       <button class="btn btn-danger" value="confirm" type="submit" id="reset-confirm">Reset everything</button>
@@ -244,7 +242,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <noscript>
-  <p class="noscript">This tracker needs JavaScript enabled to read its trophy data and store your progress.</p>
+  <p class="noscript">This tracker needs JavaScript to read its trophy data and store your progress.</p>
 </noscript>
 
 <script type="module" src="app.js"></script>

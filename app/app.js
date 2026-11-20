@@ -1,12 +1,11 @@
 /* Leonida Legend — GTA VI trophy companion.
-   Plain ES module, no dependencies, no network: reads data/trophies.json from the same folder,
-   keeps the earned set in localStorage, and renders everything with DOM calls. */
+   Plain ES module, no dependencies, no network: it reads data/trophies.json from its own folder, keeps
+   the earned set in localStorage, and builds every view with DOM calls. */
 
 const STORAGE_KEY = 'leonida-legend:gta6-trophies:v1';
 const DATA_URL = 'data/trophies.json';
 const GRADES = ['platinum', 'gold', 'silver', 'bronze'];
 const GRADE_RANK = { platinum: 0, gold: 1, silver: 2, bronze: 3 };
-const KINDS = ['story', 'missable', 'collectibles', 'activities', 'online'];
 
 const els = {
   earnedCount: document.getElementById('earned-count'),
@@ -31,6 +30,7 @@ const els = {
   resultMeta: document.getElementById('result-meta'),
   viewTitle: document.getElementById('view-title'),
   viewSub: document.getElementById('view-sub'),
+  viewTools: document.querySelector('.view-tools'),
   roadmap: document.getElementById('roadmap'),
   missableList: document.getElementById('missable-list'),
   exportBtn: document.getElementById('export'),
@@ -77,7 +77,7 @@ function saveEarned() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, earned: [...state.earned].sort((a, b) => a - b) }));
   } catch {
-    toast('Could not save to this browser’s storage');
+    toast('Could not save to this browser');
   }
 }
 
@@ -92,7 +92,7 @@ function el(tag, className, text) {
 
 const ICON_TEMPLATE = document.getElementById('icon-template');
 
-function icon(name, size = 16, className = 'icon') {
+function icon(name, size = 15, className = 'icon') {
   const svg = ICON_TEMPLATE.content.firstElementChild.cloneNode(true);
   svg.setAttribute('class', className);
   svg.setAttribute('width', String(size));
@@ -112,14 +112,18 @@ function toast(message) {
 const isEarned = (t) => state.earned.has(t.id);
 const isRevealed = (t) => !state.spoiler || !t.hidden || isEarned(t);
 
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
 function matches(t) {
   if (state.grade !== 'all' && t.grade !== state.grade) return false;
-  if (state.kind === 'missable' && !t.missable) return false;
-  if (state.kind !== 'all' && state.kind !== 'missable' && t.kind !== state.kind) return false;
+  if (state.kind === 'missable') {
+    if (!t.missable) return false;
+  } else if (state.kind !== 'all' && t.kind !== state.kind) {
+    return false;
+  }
   if (state.query) {
-    const q = state.query;
     const hay = `${t.name} ${t.description} ${t.guide} ${t.grade} ${t.kind}`.toLowerCase();
-    if (!hay.includes(q)) return false;
+    if (!hay.includes(state.query)) return false;
   }
   return true;
 }
@@ -138,7 +142,7 @@ function sortedTrophies(list) {
 
 function flag(text, variant, iconName) {
   const node = el('span', `flag flag-${variant}`);
-  if (iconName) node.append(icon(iconName, 11));
+  if (iconName) node.append(icon(iconName, 10));
   node.append(document.createTextNode(text));
   return node;
 }
@@ -149,7 +153,8 @@ function renderHeader() {
   const total = state.trophies.length;
   const earned = state.trophies.filter(isEarned).length;
   const pct = total ? Math.round((earned / total) * 100) : 0;
-  const missableLeft = state.trophies.filter((t) => t.missable && !isEarned(t)).length;
+  const missable = state.trophies.filter((t) => t.missable);
+  const missableLeft = missable.filter((t) => !isEarned(t)).length;
   const platinum = state.trophies.find((t) => t.grade === 'platinum');
 
   els.earnedCount.textContent = String(earned);
@@ -160,11 +165,15 @@ function renderHeader() {
   els.bar.setAttribute('aria-valuemax', String(total));
   els.bar.setAttribute('aria-valuetext', `${earned} of ${total} trophies earned, ${pct} percent`);
 
-  els.missableLeft.textContent = `${missableLeft} missable still unearned`;
-  els.missableLeft.classList.toggle('hot', missableLeft > 0 && missableLeft < state.trophies.filter((t) => t.missable).length);
+  els.missableLeft.textContent = `${plural(missableLeft, 'missable', 'missable')} still unearned`;
+  els.missableLeft.classList.toggle('hot', missableLeft > 0 && missableLeft < missable.length);
 
   const platinumDone = platinum ? isEarned(platinum) : false;
-  els.platinumNote.textContent = platinumDone ? 'Platinum earned' : `Platinum ${earned === total - 1 ? 'one away' : 'locked'}`;
+  els.platinumNote.textContent = platinumDone
+    ? 'Platinum earned'
+    : total - earned === 1
+      ? 'Platinum one away'
+      : `Platinum ${total - earned} away`;
 
   document.title = `${earned}/${total} · Leonida Legend — GTA VI trophy guide`;
 }
@@ -197,21 +206,29 @@ function renderStats() {
 
 function renderCounts() {
   const countFor = (kind) =>
-    kind === 'all' ? state.trophies.length : kind === 'missable' ? state.trophies.filter((t) => t.missable).length : state.trophies.filter((t) => t.kind === kind).length;
+    kind === 'all'
+      ? state.trophies.length
+      : kind === 'missable'
+        ? state.trophies.filter((t) => t.missable).length
+        : state.trophies.filter((t) => t.kind === kind).length;
 
   for (const pill of els.gradePills.querySelectorAll('.pill')) {
-    const n = pill.querySelector('.pill-n');
     const grade = pill.dataset.grade;
-    n.textContent = String(grade === 'all' ? state.trophies.length : state.trophies.filter((t) => t.grade === grade).length);
+    pill.querySelector('.pill-n').textContent = String(
+      grade === 'all' ? state.trophies.length : state.trophies.filter((t) => t.grade === grade).length,
+    );
   }
   for (const pill of els.kindPills.querySelectorAll('.pill')) {
     pill.querySelector('.pill-n').textContent = String(countFor(pill.dataset.kind));
   }
   for (const tab of els.tabs) {
     const key = tab.dataset.view;
-    const n = tab.querySelector('.tab-n');
-    n.textContent = String(
-      key === 'checklist' ? state.trophies.length : key === 'roadmap' ? state.doc.roadmap.length : state.trophies.filter((t) => t.missable).length,
+    tab.querySelector('.tab-n').textContent = String(
+      key === 'checklist'
+        ? state.trophies.length
+        : key === 'roadmap'
+          ? state.doc.roadmap.length
+          : state.trophies.filter((t) => t.missable).length,
     );
   }
 }
@@ -230,7 +247,7 @@ function buildCard(t) {
 
   const badge = el('div', 'badge');
   badge.dataset.grade = t.grade;
-  badge.append(icon('i-trophy', 19));
+  badge.append(icon('i-trophy', 17));
   badge.append(el('span', 'badge-label', t.grade === 'platinum' ? 'Plat' : t.grade));
   badge.setAttribute('role', 'img');
   badge.setAttribute('aria-label', `${t.grade} trophy`);
@@ -249,22 +266,21 @@ function buildCard(t) {
     body.append(el('p', 'card-desc', t.description));
     body.append(el('p', 'card-guide', t.guide));
   } else {
-    const locked = el('div', 'card-head');
+    const head = el('div', 'card-head');
     const line = el('h3', 'locked-line');
     line.id = `trophy-name-${t.id}`;
-    line.append(icon('i-lock', 15));
+    line.append(icon('i-lock', 14));
     line.append(el('span', 'locked-strong', 'Hidden trophy'));
     line.append(document.createTextNode(' — tick to reveal'));
-    locked.append(line);
-    body.append(locked);
+    head.append(line);
+    body.append(head);
     body.append(el('p', 'locked-hint', `Stage ${t.stage} · ${t.grade} · guide and sources appear when you tick it`));
   }
 
   const foot = el('div', 'card-foot');
   if (t.missable) foot.append(flag('Missable', 'missable', 'i-alert'));
   if (!revealed) foot.append(flag('Story spoiler', 'hidden', 'i-lock'));
-  if (t.kind === 'online') foot.append(flag('Online', 'kind'));
-  if (t.kind === 'platinum') foot.append(flag('Platinum', 'kind', 'i-spark'));
+  if (t.kind === 'platinum') foot.append(flag('Platinum', 'platinum', 'i-spark'));
 
   if (revealed && Array.isArray(t.sources) && t.sources.length) {
     const sources = el('div', 'sources');
@@ -274,9 +290,9 @@ function buildCard(t) {
       a.href = src.url;
       a.target = '_blank';
       a.rel = 'noopener noreferrer nofollow';
-      a.append(icon('i-link', 10));
+      a.append(icon('i-link', 9));
       a.append(document.createTextNode(src.name));
-      a.setAttribute('aria-label', `${src.name} (opens in a new tab, not loaded by this app)`);
+      a.setAttribute('aria-label', `${src.name} (a plain link; this app never loads it)`);
       sources.append(a);
     }
     foot.append(sources);
@@ -288,8 +304,9 @@ function buildCard(t) {
   check.type = 'button';
   check.setAttribute('role', 'checkbox');
   check.setAttribute('aria-checked', String(earned));
-  check.setAttribute('aria-label', earned ? `Mark ${revealed ? t.name : 'hidden trophy'} as not earned` : `Mark ${revealed ? t.name : 'hidden trophy'} as earned`);
-  check.append(icon('i-check', 16));
+  const label = revealed ? t.name : 'hidden trophy';
+  check.setAttribute('aria-label', earned ? `Mark ${label} as not earned` : `Mark ${label} as earned`);
+  check.append(icon('i-check', 15));
   check.addEventListener('click', () => toggle(t.id));
   card.append(check);
 
@@ -314,20 +331,18 @@ function toggle(id) {
 /* ------------------------------------------------------------------ checklist view */
 
 function renderList() {
-  const all = state.trophies;
-  const filtered = sortedTrophies(all.filter(matches));
+  const filtered = sortedTrophies(state.trophies.filter(matches));
   const frag = document.createDocumentFragment();
   for (const t of filtered) frag.append(buildCard(t));
   els.list.replaceChildren(frag);
 
-  const total = all.length;
+  const total = state.trophies.length;
   els.resultCount.textContent = `Showing ${filtered.length} of ${total} trophies`;
-  const earnedShown = filtered.filter(isEarned).length;
   const bits = [];
   if (state.query) bits.push(`matching “${state.query}”`);
   if (state.grade !== 'all') bits.push(state.grade);
   if (state.kind !== 'all') bits.push(state.kind);
-  els.resultMeta.textContent = `${earnedShown} earned in this view${bits.length ? ` · ${bits.join(' · ')}` : ''}`;
+  els.resultMeta.textContent = `${filtered.filter(isEarned).length} earned in this view${bits.length ? ` · ${bits.join(' · ')}` : ''}`;
 
   const none = filtered.length === 0;
   els.empty.hidden = !none;
@@ -397,10 +412,11 @@ function renderMissable() {
     const earned = isEarned(t);
     const revealed = isRevealed(t);
     const card = el('article', 'missable-card');
+    card.dataset.id = String(t.id);
     card.classList.toggle('is-earned', earned);
 
     const ic = el('div', 'missable-icon');
-    ic.append(icon(earned ? 'i-check' : 'i-alert', 18));
+    ic.append(icon(earned ? 'i-check' : 'i-alert', 16));
     card.append(ic);
 
     const body = el('div');
@@ -415,7 +431,7 @@ function renderMissable() {
     const act = el('div', 'missable-act');
     const jump = el('button', 'btn btn-quiet');
     jump.type = 'button';
-    jump.append(icon('i-list', 15));
+    jump.append(icon('i-list', 14));
     jump.append(document.createTextNode('Open'));
     jump.setAttribute('aria-label', `Open ${revealed ? t.name : 'hidden trophy'} in the checklist`);
     jump.addEventListener('click', () => openTrophy(t.id));
@@ -433,16 +449,14 @@ function openTrophy(id) {
   state.grade = 'all';
   state.kind = 'all';
   els.search.value = '';
-  syncPills();
+  syncControls();
   render();
   const card = els.list.querySelector(`.card[data-id="${id}"]`);
-  if (card) {
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    card.classList.add('is-flash');
-    setTimeout(() => card.classList.remove('is-flash'), 1200);
-    const check = card.querySelector('.check');
-    if (check) check.focus({ preventScroll: true });
-  }
+  if (!card) return;
+  card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  card.classList.add('is-flash');
+  setTimeout(() => card.classList.remove('is-flash'), 1200);
+  card.querySelector('.check')?.focus({ preventScroll: true });
 }
 
 /* ------------------------------------------------------------------ views & controls */
@@ -450,11 +464,11 @@ function openTrophy(id) {
 const VIEW_COPY = {
   checklist: {
     title: 'Trophy checklist',
-    sub: 'All 55 trophies in roadmap order. Tick a card to bank it — progress saves in this browser.',
+    sub: 'All 55 trophies in roadmap order. Tick a card to bank it; progress saves in this browser.',
   },
   roadmap: {
     title: 'Roadmap to the platinum',
-    sub: 'Eight stages, in the order that keeps every missable in reach. Tap a trophy to jump to its guide.',
+    sub: 'Eight stages in the order that keeps every missable reachable. Pick a trophy to jump to its guide.',
   },
   missable: {
     title: 'Missable trophies',
@@ -474,7 +488,7 @@ function setView(view, focusPanel = false) {
   els.panelMissable.hidden = view !== 'missable';
   els.viewTitle.textContent = VIEW_COPY[view].title;
   els.viewSub.textContent = VIEW_COPY[view].sub;
-  document.querySelector('.view-tools').style.visibility = view === 'checklist' ? 'visible' : 'hidden';
+  els.viewTools.style.visibility = view === 'checklist' ? 'visible' : 'hidden';
   render();
   if (focusPanel) {
     const panel = view === 'checklist' ? els.panelChecklist : view === 'roadmap' ? els.panelRoadmap : els.panelMissable;
@@ -482,7 +496,7 @@ function setView(view, focusPanel = false) {
   }
 }
 
-function syncPills() {
+function syncControls() {
   for (const pill of els.gradePills.querySelectorAll('.pill')) {
     pill.setAttribute('aria-pressed', String(pill.dataset.grade === state.grade));
   }
@@ -543,12 +557,15 @@ async function importProgress(file) {
   const valid = new Set();
   let skipped = 0;
   for (const item of raw) {
-    if (Number.isInteger(item) && state.byId.has(item)) valid.add(item);
-    else if (typeof item === 'string') {
+    if (Number.isInteger(item) && state.byId.has(item)) {
+      valid.add(item);
+    } else if (typeof item === 'string') {
       const hit = state.trophies.find((t) => t.name === item);
       if (hit) valid.add(hit.id);
       else skipped += 1;
-    } else skipped += 1;
+    } else {
+      skipped += 1;
+    }
   }
   if (!valid.size && raw.length) {
     toast('No trophy in that file matched this list');
@@ -558,6 +575,13 @@ async function importProgress(file) {
   saveEarned();
   render();
   toast(`Imported ${valid.size} earned${skipped ? ` · ${skipped} skipped` : ''}`);
+}
+
+function doReset() {
+  state.earned = new Set();
+  saveEarned();
+  render();
+  toast('Progress reset');
 }
 
 /* ------------------------------------------------------------------ boot */
@@ -584,7 +608,8 @@ async function boot() {
   els.tabs.forEach((tab) => {
     tab.addEventListener('click', () => setView(tab.dataset.view, true));
     tab.addEventListener('keydown', (event) => {
-      if (!['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return;
+      const keys = ['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft', 'Home', 'End'];
+      if (!keys.includes(event.key)) return;
       event.preventDefault();
       const index = els.tabs.indexOf(tab);
       const last = els.tabs.length - 1;
@@ -602,7 +627,7 @@ async function boot() {
     const pill = event.target.closest('.pill');
     if (!pill) return;
     state.grade = pill.dataset.grade;
-    syncPills();
+    syncControls();
     render();
   });
 
@@ -610,7 +635,7 @@ async function boot() {
     const pill = event.target.closest('.pill');
     if (!pill) return;
     state.kind = pill.dataset.kind;
-    syncPills();
+    syncControls();
     render();
   });
 
@@ -631,7 +656,7 @@ async function boot() {
   els.spoiler.addEventListener('click', () => {
     state.spoiler = !state.spoiler;
     localStorage.setItem(`${STORAGE_KEY}:spoiler`, state.spoiler ? '1' : '0');
-    syncPills();
+    syncControls();
     render();
     toast(state.spoiler ? 'Spoiler shield on' : 'Spoiler shield off');
   });
@@ -658,7 +683,7 @@ async function boot() {
     state.grade = 'all';
     state.kind = 'all';
     els.search.value = '';
-    syncPills();
+    syncControls();
     render();
     els.search.focus();
   });
@@ -678,19 +703,12 @@ async function boot() {
     }
   });
 
-  const missableTotal = state.trophies.filter((t) => t.missable).length;
-  els.footMeta.textContent = `${state.trophies.length} trophies · ${missableTotal} missable · ${state.doc.roadmap.length} roadmap stages · ${state.doc.meta?.source_note ? 'Sources cited on every card' : ''}`;
+  const missables = state.trophies.filter((t) => t.missable).length;
+  els.footMeta.textContent = `${plural(state.trophies.length, 'trophy', 'trophies')} · ${plural(missables, 'missable', 'missable')} · ${plural(state.doc.roadmap.length, 'roadmap stage', 'roadmap stages')} · sources cited on every card`;
 
-  syncPills();
+  syncControls();
   setView('checklist');
   render();
-}
-
-function doReset() {
-  state.earned = new Set();
-  saveEarned();
-  render();
-  toast('Progress reset');
 }
 
 boot();

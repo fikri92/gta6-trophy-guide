@@ -1,166 +1,261 @@
 #!/usr/bin/env python3
-"""Pre-submission verification for the GTA VI trophy guide entry.
+"""Pre-submission verification for the Leonida Legend entry.
 
-Checks (each printed with its real values, never assumed):
-  1. app/data/trophies.json parses, 55 items, every required key present and valid
-  2. official name/description text is byte-identical to the supplied list
-  3. no external loads: script src / link href / import specifiers / fetch() / CSS url()
-  4. app/ file and byte budget
-  5. screenshots: image type, dimensions, byte cap
+Static checks only -- no browser, no server -- so it can run as the last gate
+after the screenshots exist. Five groups:
+
+  1. trophy data: 55 items, complete schema, guides inside the word bounds,
+     citations well-formed, roadmap ordered, meta counts honest.
+  2. official text: name/description/grade still byte-identical to the
+     supplied list, and the trophy order unchanged.
+  3. offline: nothing in index.html, app.js or style.css pulls a remote
+     script, stylesheet, font, image, import, fetch or CSS url().
+  4. budget: file and byte counts inside the submission caps.
+  5. screenshots: 3-4 images, correct format, inside the pixel and byte caps,
+     and no stray .jpg left behind.
+
+    python3 tools/verify.py
 """
+
+from __future__ import annotations
 
 import json
 import pathlib
 import re
+import subprocess
 import sys
+from typing import Any
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 APP = ROOT / "app"
+SHOTS = ROOT / "screenshots"
+
+GUIDE_MIN_WORDS = 40
+GUIDE_MAX_WORDS = 110
+MAX_SHOT_BYTES = 262_144
+MAX_LONG_EDGE = 1280
+MIN_SHORT_EDGE = 480
+APP_MAX_FILES = 993
+APP_MAX_BYTES = 48 * 1024 * 1024
+INDEX_MAX_BYTES = 1024 * 1024
+
 PROBLEMS: list[str] = []
 
 
 def check(ok: bool, label: str, detail: str = "") -> None:
-    print(f"{'PASS' if ok else 'FAIL'}  {label}{(' — ' + detail) if detail else ''}")
+    print(f"{'PASS' if ok else 'FAIL'}  {label}{f' -- {detail}' if detail else ''}")
     if not ok:
         PROBLEMS.append(label)
 
 
-def main() -> int:
-    doc = json.loads((APP / "data" / "trophies.json").read_text(encoding="utf-8"))
-    items = doc["trophies"]
-    print("=" * 78)
-    print("1. TROPHY DATA")
-    print("=" * 78)
-    check(len(items) == 55, "55 trophies", f"{len(items)} items")
-    check(len({t["id"] for t in items}) == 55, "unique ids", f"max id {max(t['id'] for t in items)}")
-
-    guides = [t for t in items if isinstance(t.get("guide"), str) and t["guide"].strip()]
-    check(len(guides) == 55, "every trophy has a non-blank guide", f"{len(guides)}/55")
-    words = [len(t["guide"].split()) for t in items]
-    check(all(40 <= w <= 110 for w in words), "every guide is 40-110 words", f"{min(words)}-{max(words)} words")
-
-    for key, allowed in (("kind", {"story", "collectibles", "activities", "online", "platinum"}),):
-        bad = [t["id"] for t in items if t.get(key) not in allowed]
-        check(not bad, f"{key} values valid", f"bad ids {bad}" if bad else "all valid")
-    check(all(isinstance(t.get("stage"), int) and 1 <= t["stage"] <= 8 for t in items), "stage is an int 1-8")
-    check(len({t["stage"] for t in items}) == 8, "all 8 stages used", f"{sorted({t['stage'] for t in items})}")
-    check(all(isinstance(t.get("missable"), bool) for t in items), "missable is boolean")
-    check(all(isinstance(t.get("hidden"), bool) for t in items), "hidden is boolean")
-
-    src_ok = all(
-        isinstance(t.get("sources"), list) and 1 <= len(t["sources"]) <= 3 and all(isinstance(s.get("name"), str) and s["name"].strip() and isinstance(s.get("url"), str) and s["url"].startswith("https://") for s in t["sources"])
-        for t in items
-    )
-    check(src_ok, "sources: 1-3 named https objects each")
-    total_sources = sum(len(t["sources"]) for t in items)
-    hosts = sorted({re.match(r"https://([^/]+)", s["url"]).group(1) for t in items for s in t["sources"]})
-    print(f"      {total_sources} source citations across {len(hosts)} hosts: {', '.join(hosts)}")
-
-    roadmap = doc.get("roadmap", [])
-    check(len(roadmap) == 8 and [r["stage"] for r in roadmap] == list(range(1, 9)), "roadmap has 8 ordered stages")
-    check(all(r.get("title") and r.get("detail") for r in roadmap), "roadmap entries have title + detail")
-    meta = doc.get("meta", {})
-    check(meta.get("missable_count") == sum(1 for t in items if t["missable"]), "meta.missable_count matches data", str(meta.get("missable_count")))
-    check(isinstance(meta.get("source_note"), str) and len(meta["source_note"]) > 40, "meta.source_note present")
-
+def heading(text: str) -> None:
     print()
-    print("=" * 78)
-    print("2. OFFICIAL TEXT PRESERVED")
-    print("=" * 78)
-    # Baseline: the supplied starter data, from the competition kit or a git baseline if one exists.
-    import subprocess
+    print("=" * 74)
+    print(text)
+    print("=" * 74)
 
-    baseline = None
+
+def load_baseline() -> dict[str, Any] | None:
+    """The supplied list, from the competition kit or from git HEAD."""
     for candidate in (
         pathlib.Path("/root/workspace/makefun/tg/gta6-trophy-guide-01-kit/starter/app/data/trophies.json"),
         pathlib.Path("/workspace/makefun/tg/gta6-trophy-guide-01-kit/starter/app/data/trophies.json"),
     ):
         if candidate.is_file():
-            baseline = json.loads(candidate.read_text(encoding="utf-8"))
             print(f"      baseline: {candidate}")
-            break
-    if baseline is None:
-        try:
-            baseline = json.loads(subprocess.run(["git", "-C", str(ROOT), "show", "HEAD:app/data/trophies.json"], capture_output=True, text=True, check=True).stdout)
-            print("      baseline: git HEAD")
-        except (subprocess.CalledProcessError, json.JSONDecodeError):
-            pass
+            return json.loads(candidate.read_text(encoding="utf-8"))
+    try:
+        raw = subprocess.run(
+            ["git", "-C", str(ROOT), "show", "HEAD:app/data/trophies.json"],
+            capture_output=True, text=True, check=True,
+        ).stdout
+        print("      baseline: git HEAD")
+        return json.loads(raw)
+    except (subprocess.CalledProcessError, json.JSONDecodeError):
+        return None
 
+
+def check_data(doc: dict[str, Any]) -> list[dict[str, Any]]:
+    heading("1. TROPHY DATA")
+    items: list[dict[str, Any]] = doc["trophies"]
+
+    check(len(items) == 55, "55 trophies", f"{len(items)} items")
+    ids = [t["id"] for t in items]
+    check(sorted(ids) == list(range(1, 56)), "ids run 1-55 with no gaps", f"{len(set(ids))} unique")
+
+    guides = [t for t in items if isinstance(t.get("guide"), str) and t["guide"].strip()]
+    check(len(guides) == 55, "every trophy has a written guide", f"{len(guides)}/55")
+
+    words = [len(t["guide"].split()) for t in items]
+    check(
+        all(GUIDE_MIN_WORDS <= w <= GUIDE_MAX_WORDS for w in words),
+        f"every guide is {GUIDE_MIN_WORDS}-{GUIDE_MAX_WORDS} words",
+        f"{min(words)}-{max(words)} words, {sum(words)} total",
+    )
+
+    allowed = {"story", "collectibles", "activities", "online", "platinum"}
+    bad_kind = [t["id"] for t in items if t.get("kind") not in allowed]
+    check(not bad_kind, "kind values are valid", f"bad ids {bad_kind}" if bad_kind else "all valid")
+
+    check(
+        all(isinstance(t.get("stage"), int) and 1 <= t["stage"] <= 8 for t in items),
+        "stage is an int in 1-8",
+        f"{sorted({t['stage'] for t in items})}",
+    )
+    check(len({t["stage"] for t in items}) == 8, "all eight stages are used")
+    check(all(isinstance(t.get("missable"), bool) for t in items), "missable is boolean")
+    check(all(isinstance(t.get("hidden"), bool) for t in items), "hidden is boolean")
+    check(
+        all(("missable_note" in t) == t["missable"] for t in items),
+        "missable notes exist exactly where the flag is set",
+        f"{sum(1 for t in items if t['missable'])} notes",
+    )
+
+    src_ok = all(
+        isinstance(t.get("sources"), list)
+        and 1 <= len(t["sources"]) <= 3
+        and all(
+            isinstance(s.get("name"), str) and s["name"].strip()
+            and isinstance(s.get("url"), str) and s["url"].startswith("https://")
+            for s in t["sources"]
+        )
+        for t in items
+    )
+    check(src_ok, "sources: 1-3 named https objects each")
+    total_sources = sum(len(t["sources"]) for t in items)
+    hosts = sorted({re.match(r"https://([^/]+)", s["url"]).group(1) for t in items for s in t["sources"]})  # type: ignore[union-attr]
+    print(f"      {total_sources} citations across {len(hosts)} hosts: {', '.join(hosts)}")
+
+    guides_unique = len({t["guide"] for t in items})
+    check(guides_unique == 55, "no guide is duplicated", f"{guides_unique} distinct")
+
+    roadmap = doc.get("roadmap", [])
+    check(len(roadmap) == 8 and [r["stage"] for r in roadmap] == list(range(1, 9)), "roadmap has 8 ordered stages")
+    check(all(r.get("title") and r.get("detail") for r in roadmap), "every stage has a title and detail")
+
+    meta = doc.get("meta", {})
+    actual = sum(1 for t in items if t["missable"])
+    check(meta.get("missable_count") == actual, "meta.missable_count matches the data", f"{meta.get('missable_count')} vs {actual}")
+    check(isinstance(meta.get("source_note"), str) and len(meta["source_note"]) > 40, "meta.source_note present")
+    return items
+
+
+def check_official(items: list[dict[str, Any]], doc: dict[str, Any]) -> None:
+    heading("2. OFFICIAL TEXT PRESERVED")
+    baseline = load_baseline()
     if baseline is None:
         print("SKIP  no baseline copy of the supplied data found")
-    else:
-        o_by_id = {t["id"]: t for t in baseline["trophies"]}
-        drift = [(t["id"], f) for t in items for f in ("name", "description", "grade") if o_by_id[t["id"]][f] != t[f]]
-        check(not drift, "names/descriptions/grades identical to the supplied list", f"drift: {drift}" if drift else "55/55 byte-identical")
-        check([t["id"] for t in items] == [t["id"] for t in baseline["trophies"]], "trophy order unchanged")
-        check(baseline.get("game") == doc.get("game"), "game title unchanged", str(doc.get("game")))
+        return
+    originals = {t["id"]: t for t in baseline["trophies"]}
+    drift = [
+        (t["id"], field)
+        for t in items
+        for field in ("name", "description", "grade")
+        if originals.get(t["id"], {}).get(field) != t[field]
+    ]
+    check(not drift, "names/descriptions/grades identical to the supplied list",
+          f"drift: {drift}" if drift else "55/55 byte-identical")
+    check([t["id"] for t in items] == [t["id"] for t in baseline["trophies"]], "trophy order unchanged")
+    check(baseline.get("game") == doc.get("game"), "game title unchanged", str(doc.get("game")))
 
-    print()
-    print("=" * 78)
-    print("3. NO EXTERNAL LOADS")
-    print("=" * 78)
+
+def check_offline() -> None:
+    heading("3. NO EXTERNAL LOADS")
     html = (APP / "index.html").read_text(encoding="utf-8")
     js = (APP / "app.js").read_text(encoding="utf-8")
     css = (APP / "style.css").read_text(encoding="utf-8")
 
-    bad_scripts = re.findall(r"<script[^>]*\bsrc=[\"']([^\"']+)", html)
-    bad_links = re.findall(r"<link[^>]*\bhref=[\"']([^\"']+)", html)
-    imports = re.findall(r"""^\s*(?:import|export)\s[^;]*?from\s+[\"']([^\"']+)[\"']""", js, re.M) + re.findall(r"""\bimport\(\s*[\"']([^\"']+)[\"']""", js)
-    fetches = re.findall(r"""\bfetch\(\s*[\"']([^\"']+)[\"']""", js)
-    css_urls = re.findall(r"""url\(\s*[\"']?([^\"')]+)""", css)
-    data_urls = re.findall(r"data:[^\s\"')]+", html + js + css)
+    scripts = re.findall(r"""<script[^>]*\bsrc=["']([^"']+)""", html)
+    links = re.findall(r"""<link[^>]*\bhref=["']([^"']+)""", html)
+    imports = re.findall(r"""^\s*(?:import|export)\s[^;]*?from\s+["']([^"']+)["']""", js, re.M)
+    imports += re.findall(r"""\bimport\(\s*["']([^"']+)["']""", js)
+    fetches = re.findall(r"""\bfetch\(\s*["']([^"']+)["']""", js)
+    css_urls = re.findall(r"""url\(\s*["']?([^"')]+)""", css)
+    data_uris = re.findall(r"data:[^\s\"')]+", html + js + css)
 
-    def external(refs: list[str]) -> list[str]:
+    def remote(refs: list[str]) -> list[str]:
         return [r for r in refs if re.match(r"^(?:[a-z][a-z0-9+.-]*:|//)", r, re.I)]
 
-    check(not external(bad_scripts), "no remote <script src>", str(bad_scripts))
-    check(not external(bad_links), "no remote <link href>", str(bad_links))
-    check(not external(imports), "no remote import specifiers", str(imports) or "none")
-    check(not external(fetches), "fetch() targets are local", str(fetches))
+    check(not remote(scripts), "no remote <script src>", str(scripts) or "none")
+    check(not remote(links), "no remote <link href>", str(links) or "none")
+    check(not remote(imports), "no remote import specifiers", str(imports) or "none")
+    check(not remote(fetches), "fetch() only targets local files", str(fetches))
     check(not css_urls, "no CSS url() references", str(css_urls) or "none")
-    check(not data_urls, "no data: URIs", f"{len(data_urls)} found")
-    check(all(not r.startswith("/") for r in bad_scripts + bad_links), "references are relative (no leading /)")
-    http_strings = [(f, m) for f, text in (("index.html", html), ("app.js", js), ("style.css", css)) for m in re.findall(r"https?://[^\s\"'`)]+", text)]
-    check(not http_strings, "no http(s) strings in app source", str(http_strings) or "none")
+    check(not data_uris, "no data: URIs", f"{len(data_uris)} found")
+    check(
+        all(not r.startswith("/") for r in scripts + links),
+        "script and link references are relative",
+        str(scripts + links),
+    )
+    http_strings = [
+        (name, match)
+        for name, text in (("index.html", html), ("app.js", js), ("style.css", css))
+        for match in re.findall(r"https?://[^\s\"'`)]+", text)
+    ]
+    check(not http_strings, "no http(s) strings in the app source", str(http_strings) or "none")
 
-    print()
-    print("=" * 78)
-    print("4. APP BUDGET")
-    print("=" * 78)
-    entries = [p for p in APP.rglob("*")]
+    # A citation URL may appear only in the data file, rendered as a plain
+    # link: assert the app never puts one in an attribute that loads.
+    loader_attrs = re.findall(r"""(?:src|href)\s*=\s*["'](https?:)?//""", html)
+    check(not loader_attrs, "no absolute URL in a loading attribute", f"{len(loader_attrs)} found")
+
+
+def check_budget() -> None:
+    heading("4. APP BUDGET")
+    entries = list(APP.rglob("*"))
     files = [p for p in entries if p.is_file()]
     total = sum(p.stat().st_size for p in files)
-    check(len(entries) <= 993, "app/ entries <= 993", f"{len(entries)}")
-    check(total <= 48 * 1024 * 1024, "app/ bytes <= 48 MiB", f"{total} bytes")
-    idx = (APP / "index.html").stat().st_size
-    check(idx <= 1024 * 1024, "index.html <= 1 MiB", f"{idx} bytes")
-    for p in sorted(files):
-        print(f"      {p.relative_to(ROOT)}  {p.stat().st_size} bytes")
+    check(len(entries) <= APP_MAX_FILES, f"app/ holds at most {APP_MAX_FILES} entries", f"{len(entries)}")
+    check(total <= APP_MAX_BYTES, "app/ stays under 48 MiB", f"{total} bytes")
+    index = (APP / "index.html").stat().st_size
+    check(index <= INDEX_MAX_BYTES, "index.html stays under 1 MiB", f"{index} bytes")
+    for path in sorted(files):
+        print(f"      {path.relative_to(ROOT)}  {path.stat().st_size} bytes")
 
-    print()
-    print("=" * 78)
-    print("5. SCREENSHOTS")
-    print("=" * 78)
+
+def check_screenshots() -> None:
+    heading("5. SCREENSHOTS")
     from PIL import Image
 
-    shots = sorted((ROOT / "screenshots").glob("*.png")) + sorted((ROOT / "screenshots").glob("*.jpg"))
-    check(3 <= len(shots) <= 4, "3 or 4 screenshots", f"{len(shots)}")
-    for s in shots:
-        size = s.stat().st_size
-        with Image.open(s) as im:
-            fmt, (w, h) = im.format, im.size
-            im.verify()
-        long_side, short_side = max(w, h), min(w, h)
-        ok = size <= 262144 and long_side <= 1280 and short_side >= 480 and fmt in ("PNG", "JPEG")
-        check(ok, f"{s.name} valid image within caps", f"{fmt} {w}x{h} {size} bytes")
-    stale = list((ROOT / "screenshots").glob("*.jpg"))
-    check(not stale, "no leftover .jpg screenshots", str([s.name for s in stale]) or "none")
+    shots = sorted(SHOTS.glob("*.png")) + sorted(SHOTS.glob("*.jpg"))
+    check(3 <= len(shots) <= 4, "three or four screenshots", f"{len(shots)}")
+    for shot in shots:
+        size = shot.stat().st_size
+        with Image.open(shot) as image:
+            fmt, (w, h) = image.format, image.size
+            image.verify()
+        long_edge, short_edge = max(w, h), min(w, h)
+        ok = (
+            size <= MAX_SHOT_BYTES
+            and long_edge <= MAX_LONG_EDGE
+            and short_edge >= MIN_SHORT_EDGE
+            and fmt in ("PNG", "JPEG")
+        )
+        check(
+            ok,
+            f"{shot.name} inside the caps",
+            f"{fmt} {w}x{h} {size} bytes, long {long_edge} short {short_edge}",
+        )
+    stray = sorted(p.name for p in SHOTS.glob("*.jpg"))
+    check(not stray, "no leftover .jpg screenshots", str(stray) or "none")
 
-    print()
-    print("=" * 78)
-    print("RESULT:", "ALL CHECKS PASSED" if not PROBLEMS else f"{len(PROBLEMS)} FAILURES: {PROBLEMS}")
-    print("=" * 78)
-    return 0 if not PROBLEMS else 1
+
+def main() -> int:
+    doc = json.loads((APP / "data" / "trophies.json").read_text(encoding="utf-8"))
+    items = check_data(doc)
+    check_official(items, doc)
+    check_offline()
+    check_budget()
+    check_screenshots()
+
+    heading("RESULT")
+    if PROBLEMS:
+        print(f"{len(PROBLEMS)} FAILURES:")
+        for label in PROBLEMS:
+            print(f"  - {label}")
+        return 1
+    print("ALL CHECKS PASSED")
+    return 0
 
 
 if __name__ == "__main__":

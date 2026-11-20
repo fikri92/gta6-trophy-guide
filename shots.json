@@ -1,6 +1,29 @@
 [
-  { "file": "1-cover.png", "path": "/", "note": "checklist at the top, progress header, 14 trophies earned", "viewport": { "width": 1280, "height": 800 } },
-  { "file": "2-checklist.png", "path": "/", "note": "checklist cards with guide text, sources and earned states", "scroll": 1400, "viewport": { "width": 1280, "height": 800 } },
-  { "file": "3-roadmap.png", "path": "/", "tab": "roadmap", "note": "the 8 roadmap stages with their trophies", "viewport": { "width": 1280, "height": 800 } },
-  { "file": "4-missable.png", "path": "/", "tab": "missable", "note": "the missable trophies with how each one is lost", "viewport": { "width": 1280, "height": 800 } }
+  {
+    "file": "1-cover.png",
+    "path": "/",
+    "note": "the header with grade tallies, then whole checklist cards from a clean scroll position",
+    "viewport": { "width": 1280, "height": 800 }
+  },
+  {
+    "file": "2-checklist.png",
+    "path": "/",
+    "note": "mid-list: a story card and its neighbours, guide copy and citations visible, earned states showing",
+    "scroll": 1400,
+    "viewport": { "width": 1280, "height": 800 }
+  },
+  {
+    "file": "3-roadmap.png",
+    "path": "/",
+    "tab": "roadmap",
+    "note": "all eight roadmap stages in one frame, captured on a taller viewport and scaled down to fit",
+    "viewport": { "width": 1280, "height": 800 }
+  },
+  {
+    "file": "4-missable.png",
+    "path": "/",
+    "tab": "missable",
+    "note": "the missable register: each trophy with the moment it becomes unreachable",
+    "viewport": { "width": 1280, "height": 800 }
+  }
 ]
